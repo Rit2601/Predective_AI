@@ -7,7 +7,7 @@
     @import url('https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap');
 
     body {
-      background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+      background: radial-gradient(ellipse at bottom, #0a0a0a 0%, #000000 100%);
       color: #fff;
       font-family: 'UnifrakturCook', cursive;
       text-align: center;
@@ -122,7 +122,7 @@
     <div id="speakingText">🗣️ Genie is speaking...</div>
     <div id="sparkle">✨</div>
   </div>
-  <h1>🔮 I Can Read Your Mind 🔮</h1>
+  <h1>🔮 I Can Read Your Mind</h1>
   <button id="startBtn" onclick="startReading()">✨ Start</button>
   <div id="status"></div>
 
@@ -137,6 +137,8 @@
   <div id="thankyou" class="thankyou"></div>
 
   <script>
+    const BACKEND_URL = 'https://predective-ai.onrender.com'; // ✅ CHANGE THIS TO YOUR ACTUAL RENDER URL
+
     const music = document.getElementById("bg-music");
     const volumeSlider = document.getElementById("volumeControl");
     const toggleBtn = document.getElementById("toggleMusic");
@@ -154,19 +156,17 @@
     });
 
     const steps = [
-  "Close your eyes... and think of your age. 🧘‍♂️ Let it appear in your mind like a floating number.",
-  "Now... take the digits of your age and add them together. For example, 1 plus 8 gives 9 for age 18. But if the result is a double digit like 2 plus 9 is 11, then add 1 plus 1 to get 2. Simple, right?",
-  "Good... let that single digit dance in your mind.",
-  "Now multiply that number by the magical number — NINE. The ancient number of destiny!",
-  "You now hold a new number. It might be two or three digits.",
-  "Add those digits together again until you have a single digit.",
-  "Now... you've arrived at a final, single-digit number. Let it echo in your mind.",
-  "Spell it in your head... over and over... like a mantra... like a whisper from the stars.",
-  "Now... the spirits speak... The stars align... I peer into your thoughts... counting down 3... 2... 1...",
-  "You were thinking of... NINE! The mystical number of truth and enlightenment! 🔮",
-  "Am I Right?"
-];
-
+      "Close your eyes... and think of your age. 🧘‍♂️ Let it appear in your mind like a floating number.",
+      "Now... take the digits of your age and add them together. For example, 1 plus 8 gives 9 for age 18. But if the result is a double digit like 2 plus 9 is 11, then add 1 plus 1 to get 2. Simple, right?",
+      "Good... let that single digit dance in your mind.",
+      "Now multiply that number by the magical number — NINE. The ancient number of destiny!",
+      "You now hold a new number. It might be two or three digits.",
+      "Add those digits together again until you have a single digit.",
+      "Now... you've arrived at a final, single-digit number. Let it echo in your mind.",
+      "Spell it in your head... over and over... like a mantra... like a whisper from the stars.",
+      "Now... the spirits speak... The stars align... I peer into your thoughts... counting down 3... 2... 1...",
+      "You were thinking of... NINE! The mystical number of truth and enlightenment! 🔮"
+    ];
 
     async function speak(text) {
       const speakingIndicator = document.getElementById("speakingText");
@@ -183,11 +183,13 @@
       }, 50);
 
       try {
-        const res = await fetch('https://predective-ai.onrender.com/api/speak', {
+        const res = await fetch(`${BACKEND_URL}/api/speak`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ text })
         });
+
+        if (!res.ok) throw new Error("TTS API failed");
 
         const blob = await res.blob();
         const audio = new Audio(URL.createObjectURL(blob));
@@ -196,6 +198,7 @@
           audio.play();
         });
       } catch (e) {
+        console.warn("Using browser fallback voice", e);
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.rate = 1;
         speechSynthesis.speak(utterance);
@@ -275,7 +278,6 @@
       await speak("Say OK, Done, or Hmmm when you're ready.");
       await waitForOK();
 
-      // ✨ Sparkle animation for “Let's begin...”
       sparkle.style.display = "block";
       sparkle.textContent = "✨ Let's begin...";
       sparkle.style.animation = "sparkleFade 2s ease-in-out forwards";
@@ -285,7 +287,7 @@
       for (let step of steps) {
         status.textContent = step;
         await speak(step);
-        if (!step.includes("NINE")) {
+        if (!step.includes("You were thinking of")) {
           await waitForOK();
         }
       }

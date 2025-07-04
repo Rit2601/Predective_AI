@@ -1,5 +1,4 @@
-require('dotenv').config(); // Load .env variables
-
+require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
@@ -8,11 +7,11 @@ const path = require('path');
 const app = express();
 const port = process.env.PORT || 3000;
 
+const ELEVEN_LABS_API_KEY = process.env.ELEVEN_LABS_API_KEY;
+const VOICE_ID = process.env.VOICE_ID;
+
 app.use(express.static('public'));
 app.use(bodyParser.json());
-
-const ELEVEN_LABS_API_KEY = process.env.ELEVEN_LABS_API_KEY;
-const VOICE_ID = 'wXvR48IpOq9HACltTmt7'; // Example voice ID
 
 app.post('/api/speak', async (req, res) => {
   const text = req.body.text;
@@ -34,7 +33,11 @@ app.post('/api/speak', async (req, res) => {
       }),
     });
 
-    if (!response.ok) throw new Error('TTS failed');
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error("TTS failed:", errText);
+      return res.status(500).send("Voice generation failed: " + errText);
+    }
 
     const buffer = await response.arrayBuffer();
     res.set({ 'Content-Type': 'audio/mpeg' });
